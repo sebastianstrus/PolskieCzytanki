@@ -148,9 +148,9 @@ struct StoryDetailView: View {
 
     private var storyText: some View {
         Text(story.text)
-            .font(.system(size: 17, weight: .regular, design: .rounded))
+            .font(.custom("ChalkboardSE-Regular", size: UIDevice.current.userInterfaceIdiom == .pad ? 24 : 18))
             .foregroundStyle(.primary)
-            .lineSpacing(5)
+            .lineSpacing(6)
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
