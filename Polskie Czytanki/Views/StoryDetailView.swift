@@ -11,11 +11,13 @@ struct StoryDetailView: View {
     @Environment(SettingsStore.self) private var settings
     @Environment(ProgressStore.self) private var progress
     @Environment(AudioPlayer.self) private var audio
+    @Environment(StoryRepository.self) private var repository
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedAnswers: [Int: String] = [:]
     @State private var checkShake: CGFloat = 0
     @State private var showCelebration: Bool = false
+    @State private var showGrandFinale: Bool = false
     @State private var titleAppeared: Bool = false
 
     private var allAnswered: Bool {
@@ -62,6 +64,17 @@ struct StoryDetailView: View {
                     dismiss()
                 }
                 .transition(.opacity.combined(with: .scale(scale: 1.04)))
+            }
+
+            if showGrandFinale {
+                GrandFinaleOverlay(totalStories: repository.stories.count) {
+                    withAnimation(.easeOut(duration: 0.35)) {
+                        showGrandFinale = false
+                    }
+                    dismiss()
+                }
+                .transition(.opacity.combined(with: .scale(scale: 1.06)))
+                .zIndex(10)
             }
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -192,8 +205,13 @@ struct StoryDetailView: View {
             audio.stop()
             audio.play(resourceNamed: "goodresult")
             HapticManager.celebrate()
+            let finishedAll = progress.completedCount == repository.stories.count
             withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
-                showCelebration = true
+                if finishedAll {
+                    showGrandFinale = true
+                } else {
+                    showCelebration = true
+                }
             }
         } else {
             HapticManager.error()
@@ -221,5 +239,6 @@ struct StoryDetailView: View {
         .environment(SettingsStore())
         .environment(ProgressStore())
         .environment(AudioPlayer())
+        .environment(StoryRepository())
     }
 }
