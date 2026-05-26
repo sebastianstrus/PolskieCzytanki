@@ -18,7 +18,7 @@
           "locale" : "en_US"
         }
       ],
-      "productID" : "com.polskieczytanki.premium",
+      "productID" : "com.sebastianstrus.polskieczytanki.premium",
       "referenceName" : "Premium Access",
       "type" : "NonConsumable"
     }
