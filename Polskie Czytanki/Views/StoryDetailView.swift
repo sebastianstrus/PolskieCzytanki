@@ -71,7 +71,7 @@ struct StoryDetailView: View {
             ToolbarItem(placement: .principal) {
                 Text("Czytanka \(story.number)")
                     .font(.appHeadline)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(Color.black)
             }
 
             if settings.showPlayButton {
@@ -99,12 +99,12 @@ struct StoryDetailView: View {
             ZStack {
                 Circle()
                     .fill(AppTheme.primaryGradient)
-                    .frame(width: 40, height: 40)
-                    .shadow(color: AppTheme.softShadow, radius: 4, y: 2)
+                    .frame(width: 30, height: 30)
+                    .shadow(color: AppTheme.softShadow, radius: 3, y: 1)
                 Image(systemName: isPlayingThis ? "stop.fill" : "play.fill")
-                    .font(.system(size: 16, weight: .black))
+                    .font(.system(size: 12, weight: .black))
                     .foregroundStyle(.white)
-                    .offset(x: isPlayingThis ? 0 : 1.5)
+                    .offset(x: isPlayingThis ? 0 : 1)
                     .contentTransition(.symbolEffect(.replace))
             }
         }
@@ -112,25 +112,13 @@ struct StoryDetailView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                Text("Czytanka")
-                    .font(.appCaption.weight(.heavy))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(AppTheme.primaryGradient, in: Capsule())
-                Text("Nr \(story.number)")
-                    .font(.appCaption.weight(.heavy))
-                    .foregroundStyle(.secondary)
-            }
-            Text(story.title)
-                .font(.system(size: 30, weight: .heavy, design: .rounded))
-                .foregroundStyle(.primary)
-                .multilineTextAlignment(.leading)
-                .opacity(titleAppeared ? 1 : 0)
-                .offset(y: titleAppeared ? 0 : 12)
-        }
+        Text(story.title)
+            .font(.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 30 : 20, weight: .heavy, design: .rounded))
+            .foregroundStyle(.primary)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .opacity(titleAppeared ? 1 : 0)
+            .offset(y: titleAppeared ? 0 : 12)
     }
 
     private var largeImage: some View {
