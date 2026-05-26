@@ -30,4 +30,5 @@ struct ContentView: View {
         .environment(ProgressStore())
         .environment(SettingsStore())
         .environment(AudioPlayer())
+        .environment(StoreManager())
 }

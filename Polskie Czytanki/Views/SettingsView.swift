@@ -8,9 +8,11 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(SettingsStore.self) private var settings
     @Environment(ProgressStore.self) private var progress
+    @Environment(StoreManager.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var showResetConfirmation = false
     @State private var showOnboarding = false
+    @State private var showPaywall = false
 
     var body: some View {
         @Bindable var bindableSettings = settings
@@ -29,6 +31,11 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(spacing: 20) {
+                    sectionHeader("Premium")
+                    SettingsCard {
+                        premiumRow
+                    }
+
                     sectionHeader("Odtwarzanie")
                     SettingsCard {
                         Toggle(isOn: $bindableSettings.showPlayButton) {
@@ -157,6 +164,93 @@ struct SettingsView: View {
         .fullScreenCover(isPresented: $showOnboarding) {
             OnboardingView {}
         }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView()
+        }
+    }
+
+    @ViewBuilder
+    private var premiumRow: some View {
+        if store.isPremium {
+            HStack(spacing: 14) {
+                Image(systemName: "crown.fill")
+                    .font(.title3)
+                    .foregroundStyle(.white)
+                    .frame(width: 40, height: 40)
+                    .background(AppTheme.successGradient, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Premium aktywne")
+                        .font(.appHeadline)
+                        .foregroundStyle(.primary)
+                    Text("Masz dostęp do wszystkich 320 czytanek.")
+                        .font(.appCaption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer()
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.title3)
+                    .foregroundStyle(Color(red: 0.31, green: 0.81, blue: 0.55))
+            }
+        } else {
+            VStack(spacing: 12) {
+                Button {
+                    HapticManager.tap()
+                    showPaywall = true
+                } label: {
+                    HStack(spacing: 14) {
+                        Image(systemName: "crown.fill")
+                            .font(.title3)
+                            .foregroundStyle(.white)
+                            .frame(width: 40, height: 40)
+                            .background(AppTheme.secondaryGradient, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Aktywuj Premium")
+                                .font(.appHeadline)
+                                .foregroundStyle(.primary)
+                            Text("Odblokuj wszystkie czytanki na zawsze.")
+                                .font(.appCaption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.callout.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                Divider()
+
+                Button {
+                    HapticManager.tap()
+                    Task { await store.restorePurchases() }
+                } label: {
+                    HStack(spacing: 14) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.title3)
+                            .foregroundStyle(.white)
+                            .frame(width: 40, height: 40)
+                            .background(AppTheme.primaryGradient, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Przywróć zakup")
+                                .font(.appHeadline)
+                                .foregroundStyle(.primary)
+                            Text("Jeśli już kupiłeś Premium na tym koncie.")
+                                .font(.appCaption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.callout.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 
     private var versionLabel: some View {
@@ -209,5 +303,6 @@ private struct SettingsCard<Content: View>: View {
         SettingsView()
             .environment(SettingsStore())
             .environment(ProgressStore())
+            .environment(StoreManager())
     }
 }

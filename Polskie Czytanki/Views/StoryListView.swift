@@ -8,8 +8,10 @@ import SwiftUI
 struct StoryListView: View {
     @Environment(StoryRepository.self) private var repository
     @Environment(ProgressStore.self) private var progress
+    @Environment(StoreManager.self) private var store
     @Binding var path: NavigationPath
     @State private var searchText: String = ""
+    @State private var showPaywall: Bool = false
 
     private var filteredStories: [Story] {
         guard !searchText.isEmpty else { return repository.stories }
@@ -38,12 +40,26 @@ struct StoryListView: View {
                         .padding(.horizontal, 16)
                         .padding(.top, 8)
 
+                    if !store.isPremium {
+                        premiumBanner
+                            .padding(.horizontal, 16)
+                    }
+
                     ForEach(filteredStories) { story in
+                        let locked = store.isLocked(storyNumber: story.number)
                         Button {
                             HapticManager.tap()
-                            path.append(AppRoute.story(story))
+                            if locked {
+                                showPaywall = true
+                            } else {
+                                path.append(AppRoute.story(story))
+                            }
                         } label: {
-                            StoryRowView(story: story, isCompleted: progress.isCompleted(story.id))
+                            StoryRowView(
+                                story: story,
+                                isCompleted: progress.isCompleted(story.id),
+                                isLocked: locked
+                            )
                         }
                         .buttonStyle(BouncyButtonStyle())
                         .padding(.horizontal, 16)
@@ -58,6 +74,52 @@ struct StoryListView: View {
         .toolbarBackground(Color(red: 1.00, green: 0.95, blue: 0.84), for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .searchable(text: $searchText, prompt: Text("Szukaj czytanek"))
+        .sheet(isPresented: $showPaywall) {
+            PaywallView()
+        }
+    }
+
+    private var premiumBanner: some View {
+        Button {
+            HapticManager.tap()
+            showPaywall = true
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: "crown.fill")
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .background(Color.white.opacity(0.22), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Odblokuj wszystkie czytanki")
+                        .font(.appHeadline)
+                        .foregroundStyle(.white)
+                    Text("Pierwsze \(StoreManager.freeStoryLimit) są darmowe. Reszta z Premium.")
+                        .font(.appCaption)
+                        .foregroundStyle(.white.opacity(0.95))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.callout.weight(.heavy))
+                    .foregroundStyle(.white)
+            }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
+                    .fill(LinearGradient(
+                        colors: [
+                            Color(red: 0.55, green: 0.36, blue: 0.95),
+                            Color(red: 0.96, green: 0.31, blue: 0.51)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
+            )
+            .shadow(color: AppTheme.softShadow, radius: 12, x: 0, y: 6)
+        }
+        .buttonStyle(BouncyButtonStyle())
     }
 
     private var progressHeader: some View {
@@ -111,5 +173,6 @@ struct StoryListView: View {
             .environment(ProgressStore())
             .environment(SettingsStore())
             .environment(AudioPlayer())
+            .environment(StoreManager())
     }
 }

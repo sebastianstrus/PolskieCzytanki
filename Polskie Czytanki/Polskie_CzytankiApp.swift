@@ -11,6 +11,7 @@ struct Polskie_CzytankiApp: App {
     @State private var progress = ProgressStore()
     @State private var settings = SettingsStore()
     @State private var audio = AudioPlayer()
+    @State private var store = StoreManager()
 
     var body: some Scene {
         WindowGroup {
@@ -19,9 +20,13 @@ struct Polskie_CzytankiApp: App {
                 .environment(progress)
                 .environment(settings)
                 .environment(audio)
+                .environment(store)
                 .tint(Color(red: 0.96, green: 0.31, blue: 0.51))
                 .preferredColorScheme(.light)
                 .environment(\.locale, Locale(identifier: "pl"))
+                .task {
+                    await store.loadProducts()
+                }
         }
     }
 }

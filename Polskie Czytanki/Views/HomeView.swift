@@ -184,4 +184,5 @@ struct HomeView: View {
         .environment(ProgressStore())
         .environment(SettingsStore())
         .environment(AudioPlayer())
+        .environment(StoreManager())
 }
