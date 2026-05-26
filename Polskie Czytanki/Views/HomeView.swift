@@ -37,10 +37,10 @@ struct HomeView: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 10)
 
-                    Spacer()
-
                     titleBlock
-                        .padding(.bottom, 40)
+                        .padding(.top, 20)
+
+                    Spacer()
 
                     actionButtons
                         .padding(.horizontal, 28)
