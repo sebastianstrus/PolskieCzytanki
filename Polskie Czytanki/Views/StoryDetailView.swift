@@ -101,14 +101,14 @@ struct StoryDetailView: View {
                     .fill(AppTheme.primaryGradient)
                     .frame(width: 30, height: 30)
                     .shadow(color: AppTheme.softShadow, radius: 3, y: 1)
-                Image(systemName: isPlayingThis ? "stop.fill" : "play.fill")
+                Image(systemName: isPlayingThis ? "pause.fill" : "play.fill")
                     .font(.system(size: 12, weight: .black))
                     .foregroundStyle(.white)
                     .offset(x: isPlayingThis ? 0 : 1)
                     .contentTransition(.symbolEffect(.replace))
             }
         }
-        .accessibilityLabel(Text(isPlayingThis ? "Zatrzymaj dźwięk" : "Odtwórz dźwięk"))
+        .accessibilityLabel(Text(isPlayingThis ? "Wstrzymaj dźwięk" : "Odtwórz dźwięk"))
     }
 
     private var header: some View {

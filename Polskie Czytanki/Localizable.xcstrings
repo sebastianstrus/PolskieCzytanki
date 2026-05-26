@@ -336,13 +336,13 @@
         }
       }
     },
-    "Zatrzymaj dźwięk" : {
+    "Wstrzymaj dźwięk" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Stop audio"
+            "value" : "Pause audio"
           }
         }
       }
