@@ -74,7 +74,7 @@ struct StoryListView: View {
         .toolbarBackground(Color(red: 1.00, green: 0.95, blue: 0.84), for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .searchable(text: $searchText, prompt: Text("Szukaj czytanek"))
-        .sheet(isPresented: $showPaywall) {
+        .fullScreenCover(isPresented: $showPaywall) {
             PaywallView()
         }
     }

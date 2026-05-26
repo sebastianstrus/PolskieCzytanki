@@ -9,9 +9,15 @@ import StoreKit
 struct PaywallView: View {
     @Environment(StoreManager.self) private var store
     @Environment(\.dismiss) private var dismiss
-
+    // 1. Detect if we are on a compact screen (iPhone) or regular screen (iPad)
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    
     @State private var appeared = false
     @State private var showErrorAlert = false
+
+    private var isCompact: Bool {
+        horizontalSizeClass == .compact
+    }
 
     var body: some View {
         ZStack {
@@ -33,23 +39,26 @@ struct PaywallView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
 
-                ScrollView {
-                    VStack(spacing: 28) {
+                ScrollView(isCompact ? [] : .vertical) { // Disable scrolling on iPhone if everything fits
+                    VStack(spacing: isCompact ? 16 : 28) { // Tighter spacing on iPhone
                         heroIcon
-                            .padding(.top, 20)
+                            .padding(.top, isCompact ? 5 : 20)
 
                         titleBlock
 
                         benefitsList
 
-                        Spacer(minLength: 20)
+                        Spacer(minLength: 10)
                     }
                     .padding(.horizontal, 24)
+                    .frame(maxWidth: 550) // Beautiful constraints for large screens
                 }
+                .frame(maxWidth: .infinity)
 
                 bottomBar
                     .padding(.horizontal, 24)
-                    .padding(.bottom, 28)
+                    .padding(.bottom, isCompact ? 16 : 28) // Bring bottom bar up slightly on iPhone
+                    .frame(maxWidth: 550)
             }
         }
         .task {
@@ -97,11 +106,13 @@ struct PaywallView: View {
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ))
-                .frame(width: 150, height: 150)
+                // Scale down icon on iPhone (from 150 to 95)
+                .frame(width: isCompact ? 95 : 150, height: isCompact ? 95 : 150)
                 .overlay(Circle().stroke(Color.white.opacity(0.6), lineWidth: 2))
 
             Image(systemName: "crown.fill")
-                .font(.system(size: 70, weight: .bold))
+                // Scale down crown graphic on iPhone
+                .font(.system(size: isCompact ? 44 : 70, weight: .bold))
                 .foregroundStyle(Color.yellow)
                 .shadow(color: .black.opacity(0.35), radius: 12, y: 6)
         }
@@ -110,15 +121,16 @@ struct PaywallView: View {
     }
 
     private var titleBlock: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: isCompact ? 6 : 10) {
             Text("Odblokuj wszystkie czytanki")
-                .font(.system(size: 30, weight: .heavy, design: .rounded))
+                // Shrink title typography layout dynamically
+                .font(.system(size: isCompact ? 24 : 30, weight: .heavy, design: .rounded))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .shadow(color: .black.opacity(0.35), radius: 8, y: 3)
 
             Text("Jednorazowy zakup. Dostęp na zawsze.")
-                .font(.appSubtitle)
+                .font(isCompact ? .footnote : .appSubtitle)
                 .foregroundStyle(.white.opacity(0.95))
                 .multilineTextAlignment(.center)
                 .shadow(color: .black.opacity(0.3), radius: 6, y: 2)
@@ -128,7 +140,7 @@ struct PaywallView: View {
     }
 
     private var benefitsList: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: isCompact ? 8 : 12) { // Pack items tighter on iPhone
             benefitRow(icon: "books.vertical.fill", title: "320 czytanek", subtitle: "Pełna kolekcja krótkich historii.")
             benefitRow(icon: "speaker.wave.2.fill", title: "Nagrania lektora", subtitle: "Wszystkie nagrania dźwiękowe.")
             benefitRow(icon: "questionmark.circle.fill", title: "Pytania i quizy", subtitle: "Sprawdź zrozumienie po każdej czytance.")
@@ -139,26 +151,27 @@ struct PaywallView: View {
     }
 
     private func benefitRow(icon: String, title: LocalizedStringKey, subtitle: LocalizedStringKey) -> some View {
-        HStack(spacing: 14) {
+        HStack(spacing: isCompact ? 10 : 14) {
             Image(systemName: icon)
-                .font(.title3.weight(.bold))
+                .font(isCompact ? .body.weight(.bold) : .title3.weight(.bold))
                 .foregroundStyle(.white)
-                .frame(width: 44, height: 44)
-                .background(Color.white.opacity(0.25), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.white.opacity(0.45), lineWidth: 1))
+                // Shrink benefit icon container sizes on iPhone
+                .frame(width: isCompact ? 36 : 44, height: isCompact ? 36 : 44)
+                .background(Color.white.opacity(0.25), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(Color.white.opacity(0.45), lineWidth: 1))
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(title)
-                    .font(.appHeadline)
+                    .font(isCompact ? .subheadline.weight(.bold) : .appHeadline)
                     .foregroundStyle(.white)
                 Text(subtitle)
-                    .font(.appCaption)
+                    .font(isCompact ? .caption2 : .appCaption)
                     .foregroundStyle(.white.opacity(0.85))
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer()
         }
-        .padding(14)
+        .padding(isCompact ? 10 : 14)
         .background(Color.white.opacity(0.12), in: RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
@@ -167,7 +180,7 @@ struct PaywallView: View {
     }
 
     private var bottomBar: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: isCompact ? 8 : 12) {
             purchaseButton
             restoreButton
             legalText
@@ -186,13 +199,13 @@ struct PaywallView: View {
                         .tint(Color(red: 0.55, green: 0.36, blue: 0.95))
                 } else {
                     Image(systemName: "crown.fill")
-                        .font(.title2.weight(.bold))
+                        .font(isCompact ? .body.weight(.bold) : .title2.weight(.bold))
                 }
                 Text(purchaseButtonTitle)
-                    .font(.appButton)
+                    .font(isCompact ? .subheadline.weight(.bold) : .appButton)
             }
             .foregroundStyle(Color(red: 0.55, green: 0.36, blue: 0.95))
-            .padding(.vertical, 18)
+            .padding(.vertical, isCompact ? 14 : 18) // Slimmer action button height
             .padding(.horizontal, 32)
             .frame(maxWidth: .infinity)
             .background(
@@ -221,9 +234,9 @@ struct PaywallView: View {
             Task { await handleRestore() }
         } label: {
             Text("Przywróć zakup")
-                .font(.appCaption.weight(.bold))
+                .font(.system(size: isCompact ? 11 : 12, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
-                .padding(.vertical, 10)
+                .padding(.vertical, isCompact ? 6 : 10)
                 .padding(.horizontal, 18)
                 .background(.ultraThinMaterial, in: Capsule())
                 .overlay(Capsule().stroke(Color.white.opacity(0.45), lineWidth: 1))
@@ -233,18 +246,20 @@ struct PaywallView: View {
 
     private var legalText: some View {
         Text("Jednorazowa płatność. Bez automatycznego odnawiania.")
-            .font(.system(size: 11, weight: .regular, design: .rounded))
+            .font(.system(size: isCompact ? 10 : 11, weight: .regular, design: .rounded))
             .foregroundStyle(.white.opacity(0.8))
             .multilineTextAlignment(.center)
             .padding(.top, 4)
     }
 
     private var floatingDecorations: some View {
-        ZStack {
-            decorationBubble(size: 90, x: 60, y: 120)
-            decorationBubble(size: 50, x: 320, y: 220)
-            decorationBubble(size: 70, x: 350, y: 560)
-            decorationBubble(size: 40, x: 50, y: 640)
+        GeometryReader { geometry in
+            ZStack {
+                decorationBubble(size: 90, x: geometry.size.width * 0.15, y: geometry.size.height * 0.15)
+                decorationBubble(size: 50, x: geometry.size.width * 0.85, y: geometry.size.height * 0.25)
+                decorationBubble(size: 70, x: geometry.size.width * 0.88, y: geometry.size.height * 0.75)
+                decorationBubble(size: 40, x: geometry.size.width * 0.12, y: geometry.size.height * 0.85)
+            }
         }
         .allowsHitTesting(false)
     }
