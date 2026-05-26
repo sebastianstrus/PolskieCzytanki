@@ -52,19 +52,40 @@ final class StoreManager {
     func loadProducts() async {
         isLoadingProducts = true
         defer { isLoadingProducts = false }
-        do {
-            let fetched = try await Product.products(for: [Self.premiumProductID])
-            products = fetched
-            lastError = nil
-        } catch {
-            lastError = error.localizedDescription
+        await fetchProductsWithRetry(attempts: 3)
+    }
+
+    private func fetchProductsWithRetry(attempts: Int) async {
+        for attempt in 0..<attempts {
+            do {
+                let fetched = try await Product.products(for: [Self.premiumProductID])
+                if !fetched.isEmpty {
+                    products = fetched
+                    lastError = nil
+                    return
+                }
+            } catch {
+                lastError = error.localizedDescription
+            }
+            if attempt < attempts - 1 {
+                let delayNs = UInt64(pow(2.0, Double(attempt)) * 400_000_000)
+                try? await Task.sleep(nanoseconds: delayNs)
+            }
+        }
+        if products.isEmpty && lastError == nil {
+            lastError = "Nie udało się załadować produktu. Sprawdź połączenie i spróbuj ponownie."
         }
     }
 
     @discardableResult
     func purchasePremium() async -> Bool {
+        if premiumProduct == nil {
+            await loadProducts()
+        }
         guard let product = premiumProduct else {
-            lastError = "Produkt jest niedostępny."
+            if lastError == nil {
+                lastError = "Produkt jest niedostępny. Spróbuj ponownie za chwilę."
+            }
             return false
         }
         isPurchasing = true
