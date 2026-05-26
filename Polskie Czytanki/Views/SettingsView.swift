@@ -10,6 +10,7 @@ struct SettingsView: View {
     @Environment(ProgressStore.self) private var progress
     @Environment(\.dismiss) private var dismiss
     @State private var showResetConfirmation = false
+    @State private var showOnboarding = false
 
     var body: some View {
         @Bindable var bindableSettings = settings
@@ -54,6 +55,36 @@ struct SettingsView: View {
                         }
                     }
 
+                    sectionHeader("Wprowadzenie")
+                    SettingsCard {
+                        Button {
+                            HapticManager.tap()
+                            showOnboarding = true
+                        } label: {
+                            HStack(spacing: 14) {
+                                Image(systemName: "sparkles")
+                                    .font(.title3)
+                                    .foregroundStyle(.white)
+                                    .frame(width: 40, height: 40)
+                                    .background(AppTheme.secondaryGradient, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Pokaż wprowadzenie")
+                                        .font(.appHeadline)
+                                        .foregroundStyle(.primary)
+                                    Text("Zobacz ponownie ekrany powitalne aplikacji.")
+                                        .font(.appCaption)
+                                        .foregroundStyle(.secondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.callout.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+
                     sectionHeader("Postęp")
                     SettingsCard {
                         Button {
@@ -93,7 +124,11 @@ struct SettingsView: View {
                         .buttonStyle(.plain)
                     }
 
-                    Spacer(minLength: 24)
+                    Spacer(minLength: 16)
+
+                    versionLabel
+
+                    Spacer(minLength: 8)
                 }
                 .padding(20)
             }
@@ -119,6 +154,28 @@ struct SettingsView: View {
         } message: {
             Text("Spowoduje to wyczyszczenie ukończenia wszystkich 320 czytanek.")
         }
+        .fullScreenCover(isPresented: $showOnboarding) {
+            OnboardingView {}
+        }
+    }
+
+    private var versionLabel: some View {
+        VStack(spacing: 4) {
+            Text("Polskie Czytanki")
+                .font(.appCaption.weight(.bold))
+                .foregroundStyle(.secondary)
+            Text(versionString)
+                .font(.appCaption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var versionString: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build = info?["CFBundleVersion"] as? String ?? "1"
+        return "Wersja \(version) (\(build))"
     }
 
     private func sectionHeader(_ key: LocalizedStringKey) -> some View {
