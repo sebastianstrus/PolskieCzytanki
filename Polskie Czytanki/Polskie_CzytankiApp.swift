@@ -20,6 +20,8 @@ struct Polskie_CzytankiApp: App {
                 .environment(settings)
                 .environment(audio)
                 .tint(Color(red: 0.96, green: 0.31, blue: 0.51))
+                .preferredColorScheme(.light)
+                .environment(\.locale, Locale(identifier: "pl"))
         }
     }
 }

@@ -17,32 +17,34 @@ struct SettingsView: View {
         ZStack {
             LinearGradient(
                 colors: [
-                    Color(red: 0.97, green: 0.95, blue: 0.99),
-                    Color(red: 0.91, green: 0.94, blue: 1.0)
+                    Color(red: 1.00, green: 0.95, blue: 0.84),
+                    Color(red: 1.00, green: 0.88, blue: 0.92),
+                    Color(red: 0.88, green: 0.92, blue: 1.00)
                 ],
-                startPoint: .top,
-                endPoint: .bottom
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
 
             ScrollView {
                 VStack(spacing: 20) {
-                    sectionHeader("Playback")
+                    sectionHeader("Odtwarzanie")
                     SettingsCard {
                         Toggle(isOn: $bindableSettings.showPlayButton) {
                             HStack(spacing: 14) {
                                 Image(systemName: "speaker.wave.2.fill")
                                     .font(.title3)
                                     .foregroundStyle(.white)
-                                    .frame(width: 36, height: 36)
-                                    .background(AppTheme.primaryGradient, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                    .frame(width: 40, height: 40)
+                                    .background(AppTheme.primaryGradient, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("Show play button")
+                                    Text("Pokaż przycisk odtwarzania")
                                         .font(.appHeadline)
                                         .foregroundStyle(.primary)
-                                    Text("Hide it to let kids read without audio.")
+                                    Text("Ukryj go, aby dziecko mogło czytać bez dźwięku.")
                                         .font(.appCaption)
                                         .foregroundStyle(.secondary)
+                                        .fixedSize(horizontal: false, vertical: true)
                                 }
                             }
                         }
@@ -52,7 +54,7 @@ struct SettingsView: View {
                         }
                     }
 
-                    sectionHeader("Progress")
+                    sectionHeader("Postęp")
                     SettingsCard {
                         Button {
                             HapticManager.warning()
@@ -62,7 +64,7 @@ struct SettingsView: View {
                                 Image(systemName: "arrow.counterclockwise")
                                     .font(.title3)
                                     .foregroundStyle(.white)
-                                    .frame(width: 36, height: 36)
+                                    .frame(width: 40, height: 40)
                                     .background(
                                         LinearGradient(
                                             colors: [
@@ -72,13 +74,13 @@ struct SettingsView: View {
                                             startPoint: .topLeading,
                                             endPoint: .bottomTrailing
                                         ),
-                                        in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        in: RoundedRectangle(cornerRadius: 12, style: .continuous)
                                     )
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("Reset progress")
+                                    Text("Zresetuj postęp")
                                         .font(.appHeadline)
                                         .foregroundStyle(.primary)
-                                    Text("Completed: \(progress.completedCount)")
+                                    Text("Ukończone: \(progress.completedCount)")
                                         .font(.appCaption)
                                         .foregroundStyle(.secondary)
                                 }
@@ -96,10 +98,12 @@ struct SettingsView: View {
                 .padding(20)
             }
         }
-        .navigationTitle(Text("Settings"))
-        .navigationBarTitleDisplayMode(.large)
+        .navigationTitle(Text("Ustawienia"))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Color(red: 1.00, green: 0.95, blue: 0.84), for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .confirmationDialog(
-            Text("Reset all progress?"),
+            Text("Zresetować cały postęp?"),
             isPresented: $showResetConfirmation,
             titleVisibility: .visible
         ) {
@@ -107,13 +111,13 @@ struct SettingsView: View {
                 HapticManager.success()
                 progress.resetAll()
             } label: {
-                Text("Reset")
+                Text("Resetuj")
             }
             Button(role: .cancel) {} label: {
-                Text("Cancel")
+                Text("Anuluj")
             }
         } message: {
-            Text("This will clear completion for all 320 tales.")
+            Text("Spowoduje to wyczyszczenie ukończenia wszystkich 320 czytanek.")
         }
     }
 
@@ -136,8 +140,8 @@ private struct SettingsCard<Content: View>: View {
         content
             .padding(18)
             .background(
-                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
-                    .fill(Color(.systemBackground))
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
+                    .fill(Color.white)
             )
             .shadow(color: AppTheme.softShadow, radius: 12, x: 0, y: 6)
     }

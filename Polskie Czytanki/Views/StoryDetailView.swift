@@ -14,8 +14,7 @@ struct StoryDetailView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedAnswers: [Int: String] = [:]
-    @State private var revealed: Bool = false
-    @State private var shakeOption: String?
+    @State private var checkShake: CGFloat = 0
     @State private var showCelebration: Bool = false
     @State private var titleAppeared: Bool = false
 
@@ -33,11 +32,12 @@ struct StoryDetailView: View {
         ZStack {
             LinearGradient(
                 colors: [
-                    Color(red: 1.0, green: 0.97, blue: 0.93),
-                    Color(red: 0.94, green: 0.96, blue: 1.0)
+                    Color(red: 1.00, green: 0.95, blue: 0.84),
+                    Color(red: 1.00, green: 0.88, blue: 0.92),
+                    Color(red: 0.88, green: 0.92, blue: 1.00)
                 ],
-                startPoint: .top,
-                endPoint: .bottom
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
 
@@ -65,9 +65,11 @@ struct StoryDetailView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Color(red: 1.00, green: 0.95, blue: 0.84), for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Text("Story \(story.number)")
+                Text("Czytanka \(story.number)")
                     .font(.appHeadline)
                     .foregroundStyle(.primary)
             }
@@ -94,20 +96,34 @@ struct StoryDetailView: View {
             HapticManager.tap()
             audio.toggle(resourceNamed: story.audioFileName)
         } label: {
-            Image(systemName: isPlayingThis ? "stop.circle.fill" : "play.circle.fill")
-                .font(.system(size: 32, weight: .bold))
-                .foregroundStyle(AppTheme.primaryGradient)
-                .symbolEffect(.bounce, value: isPlayingThis)
+            ZStack {
+                Circle()
+                    .fill(AppTheme.primaryGradient)
+                    .frame(width: 40, height: 40)
+                    .shadow(color: AppTheme.softShadow, radius: 4, y: 2)
+                Image(systemName: isPlayingThis ? "stop.fill" : "play.fill")
+                    .font(.system(size: 16, weight: .black))
+                    .foregroundStyle(.white)
+                    .offset(x: isPlayingThis ? 0 : 1.5)
+                    .contentTransition(.symbolEffect(.replace))
+            }
         }
-        .accessibilityLabel(Text(isPlayingThis ? "Stop audio" : "Play audio"))
+        .accessibilityLabel(Text(isPlayingThis ? "Zatrzymaj dźwięk" : "Odtwórz dźwięk"))
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Tale \(story.number)")
-                .font(.appCaption.weight(.heavy))
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Text("Czytanka")
+                    .font(.appCaption.weight(.heavy))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(AppTheme.primaryGradient, in: Capsule())
+                Text("Nr \(story.number)")
+                    .font(.appCaption.weight(.heavy))
+                    .foregroundStyle(.secondary)
+            }
             Text(story.title)
                 .font(.system(size: 30, weight: .heavy, design: .rounded))
                 .foregroundStyle(.primary)
@@ -120,27 +136,26 @@ struct StoryDetailView: View {
     private var largeImage: some View {
         Image(story.largeImageName)
             .resizable()
-            .aspectRatio(contentMode: .fill)
+            .aspectRatio(1, contentMode: .fit)
             .frame(maxWidth: .infinity)
-            .frame(height: 240)
             .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
-                    .stroke(Color.white.opacity(0.6), lineWidth: 1)
+                    .stroke(Color.white, lineWidth: 4)
             )
-            .shadow(color: AppTheme.softShadow, radius: 14, y: 8)
+            .shadow(color: AppTheme.softShadow, radius: 18, y: 10)
     }
 
     private var storyText: some View {
         Text(story.text)
             .font(.system(size: 17, weight: .regular, design: .rounded))
             .foregroundStyle(.primary)
-            .lineSpacing(4)
+            .lineSpacing(5)
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusMedium, style: .continuous)
-                    .fill(Color(.systemBackground))
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLarge, style: .continuous)
+                    .fill(Color.white)
             )
             .shadow(color: AppTheme.softShadow, radius: 10, y: 5)
     }
@@ -152,38 +167,23 @@ struct StoryDetailView: View {
                     questionNumber: index + 1,
                     totalQuestions: story.questions.count,
                     question: question,
-                    selectedOption: binding(for: index),
-                    revealed: revealed,
-                    shakingOption: shakeOption
+                    selectedOption: binding(for: index)
                 )
             }
         }
     }
 
     private var actionFooter: some View {
-        VStack(spacing: 12) {
-            if revealed && !allCorrect {
-                Text("Some answers are not right. Try again!")
-                    .font(.appCaption)
-                    .foregroundStyle(Color(red: 0.66, green: 0.15, blue: 0.22))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(
-                        Capsule().fill(Color(red: 0.96, green: 0.42, blue: 0.42).opacity(0.18))
-                    )
-            }
-
-            PrimaryButton(
-                revealed && !allCorrect ? "Try again" : "Check answers",
-                systemImage: revealed && !allCorrect ? "arrow.counterclockwise" : "checkmark.seal.fill",
-                gradient: revealed && !allCorrect ? AppTheme.secondaryGradient : AppTheme.primaryGradient
-            ) {
-                handleCheck()
-            }
-            .disabled(!allAnswered && !revealed)
-            .opacity(allAnswered || revealed ? 1.0 : 0.55)
+        PrimaryButton(
+            "Sprawdź odpowiedzi",
+            systemImage: "checkmark.seal.fill",
+            gradient: AppTheme.primaryGradient
+        ) {
+            handleCheck()
         }
+        .disabled(!allAnswered)
+        .opacity(allAnswered ? 1.0 : 0.55)
+        .modifier(ShakeEffect(animatableData: checkShake))
         .padding(.top, 8)
     }
 
@@ -191,25 +191,13 @@ struct StoryDetailView: View {
         Binding(
             get: { selectedAnswers[index] },
             set: { newValue in
-                guard !revealed else { return }
                 selectedAnswers[index] = newValue
             }
         )
     }
 
     private func handleCheck() {
-        if revealed && !allCorrect {
-            revealed = false
-            for (index, question) in story.questions.enumerated() {
-                if selectedAnswers[index] != question.correctAnswer {
-                    selectedAnswers.removeValue(forKey: index)
-                }
-            }
-            return
-        }
-
         guard allAnswered else { return }
-        revealed = true
 
         if allCorrect {
             progress.markCompleted(story.id)
@@ -221,22 +209,10 @@ struct StoryDetailView: View {
             }
         } else {
             HapticManager.error()
-            if let wrong = firstWrongOption() {
-                shakeOption = wrong
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                    shakeOption = nil
-                }
+            withAnimation(.linear(duration: 0.45)) {
+                checkShake += 1
             }
         }
-    }
-
-    private func firstWrongOption() -> String? {
-        for (index, question) in story.questions.enumerated() {
-            if let answer = selectedAnswers[index], answer != question.correctAnswer {
-                return answer
-            }
-        }
-        return nil
     }
 }
 

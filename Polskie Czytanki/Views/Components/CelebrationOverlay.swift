@@ -39,10 +39,10 @@ struct CelebrationOverlay: View {
                 }
 
                 VStack(spacing: 8) {
-                    Text("All correct!")
+                    Text("Wszystko poprawnie!")
                         .font(.system(size: 34, weight: .heavy, design: .rounded))
                         .foregroundStyle(.white)
-                    Text("Great job!")
+                    Text("Świetna robota!")
                         .font(.appSubtitle)
                         .foregroundStyle(.white.opacity(0.92))
                 }
@@ -52,7 +52,7 @@ struct CelebrationOverlay: View {
                     HapticManager.tap()
                     onDismiss()
                 } label: {
-                    Text("Continue")
+                    Text("Kontynuuj")
                         .font(.appButton)
                         .foregroundStyle(Color(red: 0.10, green: 0.62, blue: 0.45))
                         .padding(.vertical, 14)

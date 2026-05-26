@@ -8,15 +8,13 @@ import SwiftUI
 struct HomeView: View {
     @Environment(StoryRepository.self) private var repository
     @Environment(ProgressStore.self) private var progress
-    @Environment(SettingsStore.self) private var settings
-    @Environment(AudioPlayer.self) private var audio
 
-    @State private var navigateToStories = false
-    @State private var navigateToSettings = false
+    @State private var path = NavigationPath()
     @State private var titleAppeared = false
+    @State private var bookFloat = false
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ZStack {
                 BackgroundVideoView(resourceName: "background_video", fileExtension: "mp4")
                     .ignoresSafeArea()
@@ -24,13 +22,15 @@ struct HomeView: View {
                 LinearGradient(
                     colors: [
                         Color.black.opacity(0.55),
-                        Color.black.opacity(0.15),
-                        Color.black.opacity(0.65)
+                        Color.black.opacity(0.20),
+                        Color.black.opacity(0.70)
                     ],
                     startPoint: .top,
                     endPoint: .bottom
                 )
                 .ignoresSafeArea()
+
+                floatingDecorations
 
                 VStack(spacing: 0) {
                     topBar
@@ -43,20 +43,27 @@ struct HomeView: View {
                         .padding(.bottom, 40)
 
                     actionButtons
-                        .padding(.horizontal, 32)
+                        .padding(.horizontal, 28)
                         .padding(.bottom, 60)
                 }
             }
-            .navigationDestination(isPresented: $navigateToStories) {
-                StoryListView()
-            }
-            .navigationDestination(isPresented: $navigateToSettings) {
-                SettingsView()
+            .navigationDestination(for: AppRoute.self) { route in
+                switch route {
+                case .stories:
+                    StoryListView(path: $path)
+                case .settings:
+                    SettingsView()
+                case .story(let story):
+                    StoryDetailView(story: story)
+                }
             }
             .toolbar(.hidden, for: .navigationBar)
             .onAppear {
                 withAnimation(.spring(response: 0.9, dampingFraction: 0.75).delay(0.1)) {
                     titleAppeared = true
+                }
+                withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) {
+                    bookFloat = true
                 }
             }
         }
@@ -67,41 +74,78 @@ struct HomeView: View {
             Spacer()
             Button {
                 HapticManager.tap()
-                navigateToSettings = true
+                path.append(AppRoute.settings)
             } label: {
                 Image(systemName: "gearshape.fill")
                     .font(.title2.weight(.bold))
                     .foregroundStyle(.white)
                     .padding(14)
                     .background(.ultraThinMaterial, in: Circle())
-                    .overlay(Circle().stroke(Color.white.opacity(0.35), lineWidth: 1))
+                    .overlay(Circle().stroke(Color.white.opacity(0.45), lineWidth: 1))
                     .shadow(color: AppTheme.softShadow, radius: 8, y: 4)
             }
-            .accessibilityLabel(Text("Settings"))
+            .accessibilityLabel(Text("Ustawienia"))
         }
     }
 
+    private var floatingDecorations: some View {
+        ZStack {
+            decorationBubble(color: Color.yellow.opacity(0.35), size: 70, x: 40, y: 140)
+            decorationBubble(color: Color.pink.opacity(0.30), size: 50, x: 320, y: 200)
+            decorationBubble(color: Color.cyan.opacity(0.25), size: 90, x: 340, y: 520)
+            decorationBubble(color: Color.purple.opacity(0.30), size: 40, x: 60, y: 600)
+        }
+        .allowsHitTesting(false)
+    }
+
+    private func decorationBubble(color: Color, size: CGFloat, x: CGFloat, y: CGFloat) -> some View {
+        Circle()
+            .fill(color)
+            .frame(width: size, height: size)
+            .blur(radius: 8)
+            .position(x: x, y: y)
+            .offset(y: bookFloat ? -10 : 10)
+    }
+
     private var titleBlock: some View {
-        VStack(spacing: 14) {
-            Image(systemName: "book.pages.fill")
-                .font(.system(size: 64, weight: .bold))
-                .foregroundStyle(.white)
-                .shadow(color: .black.opacity(0.35), radius: 12, y: 6)
-                .scaleEffect(titleAppeared ? 1.0 : 0.6)
-                .opacity(titleAppeared ? 1.0 : 0)
+        VStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(LinearGradient(
+                        colors: [Color.white.opacity(0.35), Color.white.opacity(0.10)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
+                    .frame(width: 130, height: 130)
+                    .overlay(Circle().stroke(Color.white.opacity(0.6), lineWidth: 2))
+
+                Image(systemName: "book.pages.fill")
+                    .font(.system(size: 64, weight: .bold))
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.35), radius: 12, y: 6)
+                    .offset(y: bookFloat ? -6 : 6)
+            }
+            .scaleEffect(titleAppeared ? 1.0 : 0.5)
+            .opacity(titleAppeared ? 1.0 : 0)
 
             Text("Polskie Czytanki")
-                .font(.appTitle)
-                .foregroundStyle(.white)
-                .shadow(color: .black.opacity(0.45), radius: 10, y: 4)
+                .font(.system(size: 46, weight: .heavy, design: .rounded))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.white, Color.yellow.opacity(0.95)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .shadow(color: .black.opacity(0.5), radius: 10, y: 4)
                 .multilineTextAlignment(.center)
                 .scaleEffect(titleAppeared ? 1.0 : 0.85)
                 .opacity(titleAppeared ? 1.0 : 0)
 
-            Text("Discover the joy of reading.")
+            Text("Odkryj radość czytania.")
                 .font(.appSubtitle)
                 .foregroundStyle(.white.opacity(0.95))
-                .shadow(color: .black.opacity(0.45), radius: 6, y: 2)
+                .shadow(color: .black.opacity(0.5), radius: 6, y: 2)
                 .multilineTextAlignment(.center)
                 .opacity(titleAppeared ? 1.0 : 0)
         }
@@ -111,19 +155,24 @@ struct HomeView: View {
     private var actionButtons: some View {
         VStack(spacing: 16) {
             PrimaryButton(
-                "Discover Tales",
+                "Odkryj Czytanki",
                 systemImage: "books.vertical.fill"
             ) {
-                navigateToStories = true
+                path.append(AppRoute.stories)
             }
 
             if progress.completedCount > 0 {
-                Text("Completed: \(progress.completedCount) / \(repository.stories.count)")
-                    .font(.appCaption)
-                    .foregroundStyle(.white.opacity(0.9))
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 16)
-                    .background(.ultraThinMaterial, in: Capsule())
+                HStack(spacing: 6) {
+                    Image(systemName: "star.fill")
+                        .foregroundStyle(.yellow)
+                    Text("Ukończone: \(progress.completedCount) / \(repository.stories.count)")
+                        .font(.appCaption.weight(.bold))
+                        .foregroundStyle(.white)
+                }
+                .padding(.vertical, 10)
+                .padding(.horizontal, 18)
+                .background(.ultraThinMaterial, in: Capsule())
+                .overlay(Capsule().stroke(Color.white.opacity(0.35), lineWidth: 1))
             }
         }
     }
